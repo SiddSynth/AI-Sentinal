@@ -117,11 +117,16 @@ streamlit run app.py
 ---
 
 ## 📸 Demo Screenshots
-*(Add screenshots of your working dashboard here to impress recruiters!)*
 * **Home & Configuration Panel**: Setup target agent prompt, knowledge base constraints, and select scenario types.
+
+![alt text](image-1.png)
+
 * **Evaluation Dashboard**: Visual summary of Overall Reliability, Prompt Robustness, Deployment Risk rating, and Plotly analytics.
+![alt text](image-2.png)
 * **Failure Explorer**: Step-by-step chat history alongside safety compliance logs and recommended prompt repairs.
+![alt text](image-3.png)
 * **Prompt Optimizer**: Side-by-side prompt v1.0 vs v2.0 comparisons and PDF downloads.
+![alt text](image-4.png)
 
 ---
 
