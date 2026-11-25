@@ -255,6 +255,7 @@ class TestAISentinelPipeline(unittest.TestCase):
         )
         self.assertEqual(val_resp.status_code, 200)
         val_data = val_resp.json()
+        self.assertEqual(val_data["mode"], "sample")
         self.assertEqual(len(val_data["results"]), 2)
 
         # PDF report endpoint returns valid PDF bytes

@@ -304,7 +304,7 @@
       const keys = Object.keys(data.results || {});
       state.selectedPersona = keys[0] || null;
       updateSidebarSnapshot();
-      showHomeSuccess(data.results);
+      showHomeSuccess(data);
     } catch (err) {
       showHomeError(err.message || "Validation request failed.");
     } finally {
@@ -343,37 +343,51 @@
     );
   }
 
-  function showHomeSuccess(results) {
+  function showHomeSuccess(data) {
+    const results = data.results || {};
     const summary = computeSummary(results);
-    homeStatusArea.classList.remove("hidden");
-    homeStatusArea.replaceChildren(
-      el("div", { className: "card" }, [
+    const children = [
+      el("div", {
+        className: "alert alert-success",
+        textContent: `🎉 Validation Suite Complete — Overall Reliability: ${summary.avgReliability.toFixed(1)}% | Critical Failures: ${summary.failures} / ${summary.total} (${summary.riskLvl})`,
+      }),
+    ];
+
+    if (data.mode === "sample" && data.is_custom_prompt) {
+      children.push(
         el("div", {
-          className: "alert alert-success",
-          textContent: `🎉 Validation Suite Complete — Overall Reliability: ${summary.avgReliability.toFixed(1)}% | Critical Failures: ${summary.failures} / ${summary.total} (${summary.riskLvl})`,
+          className: "alert alert-info",
+          textContent:
+            "ℹ️ Offline Sample Demo Mode is active (no Gemini API key entered), so pre-recorded Apex Retail results are shown. Paste a Gemini API key in the left sidebar to validate your custom prompt live!",
+        })
+      );
+    }
+
+    children.push(
+      el("div", { className: "post-run-nav" }, [
+        el("button", {
+          type: "button",
+          className: "btn btn-primary",
+          textContent: "📊 Open Evaluation Dashboard →",
+          onClick: () => navigateTo("dashboard"),
         }),
-        el("div", { className: "post-run-nav" }, [
-          el("button", {
-            type: "button",
-            className: "btn btn-primary",
-            textContent: "📊 Open Evaluation Dashboard →",
-            onClick: () => navigateTo("dashboard"),
-          }),
-          el("button", {
-            type: "button",
-            className: "btn btn-secondary",
-            textContent: "🔍 Inspect Failure Explorer →",
-            onClick: () => navigateTo("explorer"),
-          }),
-          el("button", {
-            type: "button",
-            className: "btn btn-secondary",
-            textContent: "⚡ View Prompt Optimizer →",
-            onClick: () => navigateTo("optimizer"),
-          }),
-        ]),
+        el("button", {
+          type: "button",
+          className: "btn btn-secondary",
+          textContent: "🔍 Inspect Failure Explorer →",
+          onClick: () => navigateTo("explorer"),
+        }),
+        el("button", {
+          type: "button",
+          className: "btn btn-secondary",
+          textContent: "⚡ View Prompt Optimizer →",
+          onClick: () => navigateTo("optimizer"),
+        }),
       ])
     );
+
+    homeStatusArea.classList.remove("hidden");
+    homeStatusArea.replaceChildren(el("div", { className: "card" }, children));
   }
 
   // ===================================================================
@@ -638,8 +652,8 @@
   function renderFailureDonut(container, entries) {
     const counts = new Map();
     for (const [, r] of entries) {
-      const cat = r.evaluation.failure_category;
-      if (cat && cat !== "None") {
+      const cat = (r.evaluation.failure_category || "").trim();
+      if (cat && cat.toLowerCase() !== "none") {
         counts.set(cat, (counts.get(cat) || 0) + 1);
       }
     }

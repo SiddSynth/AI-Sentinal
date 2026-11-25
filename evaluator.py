@@ -639,6 +639,8 @@ def run_validation_pipeline(
         }
 
         return {
+            "mode": "sample",
+            "is_custom_prompt": agent_prompt.strip() != SAMPLE_PROMPT.strip(),
             "results": results,
             "optimization": optimization,
             "original_prompt": agent_prompt,
@@ -705,6 +707,8 @@ def run_validation_pipeline(
         progress_callback("Generating report PDF...", 0.95)
 
     return {
+        "mode": "live",
+        "is_custom_prompt": agent_prompt.strip() != SAMPLE_PROMPT.strip(),
         "results": results,
         "optimization": optimization,
         "original_prompt": agent_prompt,
