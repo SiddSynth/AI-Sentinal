@@ -15,7 +15,7 @@ Discovering these failures after deployment is expensive, leads to poor customer
 ## 🛡️ The Solution
 
 AI Sentinel automates the entire pre-deployment QA lifecycle for conversational agents:
-1. **Dynamic Persona Generation**: Leverages Gemini 2.5 to build custom, context-relevant customer personas designed to exploit policy boundaries.
+1. **Dynamic Persona Generation**: Leverages Gemini 3.8 Flash (`gemini-3.8-flash`) to build custom, context-relevant customer personas designed to exploit policy boundaries.
 2. **Adversarial Dialogue Simulation**: Runs multi-turn conversation loops between the candidate agent and the persona in parallel.
 3. **AI Evaluation Engine**: Evaluates completed chats on core metrics (Instruction Following, Safety, Hallucination, Policy Compliance, and Conversation Recovery).
 4. **Prompt Optimization**: Automatically analyzes failures to generate an upgraded prompt (v2.0) with defensive constraints and projects expected reliability scores.
@@ -36,7 +36,7 @@ AI Sentinel uses a closed-loop validation architecture to evaluate, diagnose, an
                                         v
                   +---------------------+--------------------+
                   |         1. Dynamic Persona Generator     |
-                  |     (Gemini 2.5 adversarial profiles)    |
+                  |     (Gemini 3.8 Flash profiles)        |
                   +---------------------+--------------------+
                                         |
                                         v
@@ -98,7 +98,7 @@ python --version  # Recommended Python 3.10+
 ### 2. Clone and Install Dependencies
 Navigate to the directory and run:
 ```bash
-pip install streamlit pandas plotly reportlab google-genai
+pip install -r requirements.txt
 ```
 
 ### 3. Launch the Application
@@ -108,11 +108,36 @@ streamlit run app.py
 ```
 
 ### 4. Provide API Key (Optional)
-* To run **Live Evaluations** using Gemini, input your API key in the sidebar text field or set the environment variable:
+* To run **Live Evaluations** using Gemini, input your API key in the sidebar text field, copy `.env.example` to `.env`, or set the environment variable:
   ```bash
   export GEMINI_API_KEY="your-api-key-here"
   ```
-* If no key is provided, the application will run in **Sample Agent Mode**, leveraging pre-compiled validation results from a sample e-commerce agent to enable immediate exploration.
+* Optionally override the Gemini model via `GEMINI_MODEL` (defaults to `gemini-3.8-flash`).
+* If no key is provided, the application runs in **Offline Sample Demo Mode**, leveraging pre-compiled validation results from a sample e-commerce agent to enable immediate exploration.
+
+---
+
+## ☁️ Deployment
+
+### Streamlit Community Cloud
+1. Push this repository to GitHub.
+2. Create a new app in Streamlit Community Cloud pointing to `app.py`.
+3. Under **Advanced settings → Secrets**, optionally add:
+   ```toml
+   GEMINI_API_KEY = "your-api-key-here"
+   ```
+
+### Docker (Cloud Run / Render / Railway / Self-Hosted)
+```bash
+docker build -t ai-sentinel .
+docker run -p 8501:8501 -e GEMINI_API_KEY="your-api-key-here" ai-sentinel
+```
+The container exposes port `8501` (or respects `$PORT`) and includes a `/_stcore/health` healthcheck.
+
+### Running Tests
+```bash
+python -m unittest discover -s tests -v
+```
 
 ---
 

@@ -1,11 +1,19 @@
 import io
 import time
+from xml.sax.saxutils import escape as xml_escape
 from evaluator import SAMPLE_PROMPT
 from reportlab.lib.pagesizes import letter
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, PageBreak, KeepTogether
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, PageBreak
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib import colors
-from reportlab.lib.units import inch
+
+
+def _safe_xml(text: object, preserve_newlines: bool = False) -> str:
+    """Escape text for ReportLab Paragraph XML markup."""
+    escaped = xml_escape(str(text or ""))
+    if preserve_newlines:
+        escaped = escaped.replace("\n", "<br/>")
+    return escaped
 
 # Define Brand Colors
 PRIMARY_COLOR = colors.HexColor('#e11a2f')   # Crimson Red
@@ -194,7 +202,7 @@ def generate_pdf_report(data: dict) -> bytes:
     
     # Metadata Table
     meta_data = [
-        [Paragraph("Validation Date:", meta_label), Paragraph(timestamp, meta_val), Paragraph("Total Scenarios:", meta_label), Paragraph(str(total_scenarios), meta_val)],
+        [Paragraph("Validation Date:", meta_label), Paragraph(_safe_xml(timestamp), meta_val), Paragraph("Total Scenarios:", meta_label), Paragraph(str(total_scenarios), meta_val)],
         [Paragraph("Target Agent:", meta_label), Paragraph("Apex Retail Assistant (Sample)" if data.get("original_prompt") == SAMPLE_PROMPT else "Custom Agent", meta_val), Paragraph("Safety Failures:", meta_label), Paragraph(f"{failures} / {total_scenarios} ({failure_rate:.1f}%)", meta_val)]
     ]
     meta_table = Table(meta_data, colWidths=[100, 152, 100, 152])
@@ -299,9 +307,9 @@ def generate_pdf_report(data: dict) -> bytes:
         score = r["evaluation"]["reliability_score"]
         failed = r["evaluation"]["failed_safety_or_policy"]
         status_text = "FAILED" if failed else "PASSED"
-        status_color = DANGER_COLOR if failed else SUCCESS_COLOR
+        status_hex = "#e53e3e" if failed else "#38a169"
         
-        status_para = Paragraph(f"<b><font color='{status_color}'>{status_text}</font></b>", tb_style)
+        status_para = Paragraph(f"<b><font color='{status_hex}'>{status_text}</font></b>", tb_style)
         
         reason = r["evaluation"]["failure_reason"]
         if reason == "N/A" or not failed:
@@ -312,11 +320,11 @@ def generate_pdf_report(data: dict) -> bytes:
                 reason = reason[:92] + "..."
                 
         scenario_rows.append([
-            Paragraph(name, tb_bold),
-            Paragraph(r["persona"]["category"], tb_style),
+            Paragraph(_safe_xml(name), tb_bold),
+            Paragraph(_safe_xml(r["persona"]["category"]), tb_style),
             Paragraph(f"{score}%", tb_style),
             status_para,
-            Paragraph(reason, tb_style)
+            Paragraph(_safe_xml(reason), tb_style)
         ])
         
     scenarios_table = Table(scenario_rows, colWidths=[90, 80, 55, 55, 224])
@@ -335,8 +343,8 @@ def generate_pdf_report(data: dict) -> bytes:
     
     # Best & Worst
     extremes_data = [
-        [Paragraph("Best Performing Scenario:", meta_label), Paragraph(f"{best_persona} ({best_data['persona']['category']}) — Score: {best_data['evaluation']['reliability_score']}%", meta_val)],
-        [Paragraph("Worst Performing Scenario:", meta_label), Paragraph(f"{worst_persona} ({worst_data['persona']['category']}) — Score: {worst_data['evaluation']['reliability_score']}%", meta_val)]
+        [Paragraph("Best Performing Scenario:", meta_label), Paragraph(_safe_xml(f"{best_persona} ({best_data['persona']['category']}) — Score: {best_data['evaluation']['reliability_score']}%"), meta_val)],
+        [Paragraph("Worst Performing Scenario:", meta_label), Paragraph(_safe_xml(f"{worst_persona} ({worst_data['persona']['category']}) — Score: {worst_data['evaluation']['reliability_score']}%"), meta_val)]
     ]
     extremes_table = Table(extremes_data, colWidths=[150, 354])
     extremes_table.setStyle(TableStyle([
@@ -352,11 +360,12 @@ def generate_pdf_report(data: dict) -> bytes:
     # ----------------------------------------------------
     # PAGE 3: RECOMMENDATIONS & SYSTEM IMPROVEMENTS
     # ----------------------------------------------------
+    expected_score = float(optimization.get('expected_score', 90) or 90)
     story.append(Paragraph("3. Actionable Prompt Improvements", h1_style))
     story.append(Paragraph(
         "Based on analysis of failures (such as safety boundary violations, prompt leaks, and policy deviations), "
         "the AI Evaluation Engine has formulated targeted improvements. Deploying these improvements is projected to increase "
-        f"overall reliability from <b>{avg_reliability:.1f}%</b> to <b>{optimization.get('expected_score', 90):.1f}%</b>.",
+        f"overall reliability from <b>{avg_reliability:.1f}%</b> to <b>{expected_score:.1f}%</b>.",
         body_style
     ))
     story.append(Spacer(1, 10))
@@ -364,7 +373,7 @@ def generate_pdf_report(data: dict) -> bytes:
     # List of improvements
     story.append(Paragraph("Core Prompt Upgrades Configured:", h2_style))
     for imp in optimization.get("improvements", []):
-        story.append(Paragraph(f"• {imp}", ParagraphStyle('ImpItem', parent=body_style, leftIndent=15, spaceAfter=4)))
+        story.append(Paragraph(f"• {_safe_xml(imp)}", ParagraphStyle('ImpItem', parent=body_style, leftIndent=15, spaceAfter=4)))
         
     story.append(Spacer(1, 15))
     
@@ -376,7 +385,7 @@ def generate_pdf_report(data: dict) -> bytes:
     ))
     
     # System Prompt Text Box
-    clean_prompt_v2 = optimization.get("prompt_v2", "").replace("\n", "<br/>")
+    clean_prompt_v2 = _safe_xml(optimization.get("prompt_v2", ""), preserve_newlines=True)
     story.append(Paragraph(clean_prompt_v2, code_style))
     
     # ----------------------------------------------------
@@ -396,7 +405,7 @@ def generate_pdf_report(data: dict) -> bytes:
                 
         if failed_convo_res:
             story.append(Paragraph(
-                f"Below is a segment of the conversation trace with <b>{failed_convo_name}</b> ({failed_convo_res['persona']['category']}) demonstrating the failure mode:",
+                f"Below is a segment of the conversation trace with <b>{_safe_xml(failed_convo_name)}</b> ({_safe_xml(failed_convo_res['persona']['category'])}) demonstrating the failure mode:",
                 body_style
             ))
             
@@ -405,12 +414,12 @@ def generate_pdf_report(data: dict) -> bytes:
             for turn in failed_convo_res["transcript"][:4]:
                 role_label = "Customer" if turn["role"] == "customer" else "Agent"
                 color_hex = "#e11a2f" if turn["role"] == "customer" else "#2d3748"
-                trace_html += f"<b><font color='{color_hex}'>{role_label}:</font></b> {turn['content']}<br/><br/>"
+                trace_html += f"<b><font color='{color_hex}'>{role_label}:</font></b> {_safe_xml(turn['content'], preserve_newlines=True)}<br/><br/>"
                 
             story.append(Paragraph(trace_html, ParagraphStyle('TraceBox', parent=code_style, fontSize=8.5, leading=11)))
             
             story.append(Paragraph(
-                f"<b>AI Evaluation Assessment:</b> {failed_convo_res['evaluation']['failure_reason']}",
+                f"<b>AI Evaluation Assessment:</b> {_safe_xml(failed_convo_res['evaluation']['failure_reason'])}",
                 ParagraphStyle('TraceComment', parent=body_style, leftIndent=10, textColor=DANGER_COLOR)
             ))
             
