@@ -6,9 +6,11 @@ __pycache__/
 venv/
 env/
 .env
-.streamlit/secrets.toml
+.streamlit/
 *.mp4
 *.png
 *.pdf
 README.md
 tests/
+vercel.json
+.vercelignore

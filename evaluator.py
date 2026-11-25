@@ -617,7 +617,7 @@ def run_validation_pipeline(
         for stage, progress in stages:
             if progress_callback:
                 progress_callback(stage, progress)
-            time.sleep(0.35)
+                time.sleep(0.35)
 
         personas = [p for p in MOCK_PERSONAS if p["category"] in selected_categories]
         if not personas:

@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Sentinel — Enterprise AI Agent Validation Suite</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/styles.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <!-- Sidebar Navigation Rail -->
+    <aside class="sidebar" aria-label="Application Sidebar">
+      <div class="sidebar-top">
+        <div class="brand-row">
+          <svg width="30" height="30" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M12 2L4 5.5V11.5C4 16.8 7.4 21.6 12 23C16.6 21.6 20 16.8 20 11.5V5.5L12 2Z" fill="#e11a2f" />
+            <path d="M9.5 12.2L11.2 13.9L14.8 10.1" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+          <div>
+            <div class="brand-title">AI <span class="brand-accent">Sentinel</span></div>
+            <div class="brand-sub">Pre-Deployment Agent QA</div>
+          </div>
+        </div>
+
+        <nav class="nav-list" aria-label="Primary">
+          <button type="button" class="nav-item" data-page="home" aria-current="page">
+            <span aria-hidden="true">🎯</span>
+            <span>Home &amp; Configuration</span>
+          </button>
+          <button type="button" class="nav-item" data-page="dashboard">
+            <span aria-hidden="true">📊</span>
+            <span>Evaluation Dashboard</span>
+          </button>
+          <button type="button" class="nav-item" data-page="explorer">
+            <span aria-hidden="true">🔍</span>
+            <span>Failure Explorer</span>
+          </button>
+          <button type="button" class="nav-item" data-page="optimizer">
+            <span aria-hidden="true">⚡</span>
+            <span>Prompt Optimizer</span>
+          </button>
+          <button type="button" class="nav-item" data-page="architecture">
+            <span aria-hidden="true">📐</span>
+            <span>Architecture Diagram</span>
+          </button>
+        </nav>
+      </div>
+
+      <div class="sidebar-section">
+        <label class="field-label" for="apiKeyInput">🔑 Gemini API Key</label>
+        <div class="key-input-wrap">
+          <input
+            id="apiKeyInput"
+            type="password"
+            class="text-input"
+            placeholder="Paste API key (optional)"
+            autocomplete="off"
+          />
+          <button type="button" id="toggleKeyBtn" class="icon-btn" aria-label="Show or hide API key" title="Toggle visibility">👁</button>
+        </div>
+        <div id="sidebarModePill" class="status-pill pill-sample">● Offline Sample Demo</div>
+      </div>
+
+      <div id="sidebarSnapshot" class="sidebar-section hidden">
+        <div class="field-label">📌 Active Run Snapshot</div>
+        <div class="snapshot-box">
+          <div class="snapshot-row"><span>Reliability</span><strong id="snapReliability">—</strong></div>
+          <div class="snapshot-row"><span>Failures</span><strong id="snapFailures">—</strong></div>
+          <div class="snapshot-row"><span>Risk Gate</span><span id="snapRiskPill" class="status-pill">—</span></div>
+        </div>
+      </div>
+
+      <footer class="sidebar-footer">
+        AI Sentinel v1.2.0<br />
+        Enterprise Red-Teaming &amp; Prompt Guardrails
+      </footer>
+    </aside>
+
+    <!-- Main Workspace -->
+    <main class="main-content">
+      <header class="page-header">
+        <div>
+          <h1 id="pageTitle" class="page-header-title">AI Agent Pre-Deployment Validation</h1>
+          <p id="pageSubtitle" class="page-header-sub">
+            Stress-test your conversational AI prompt against adversarial customer personas, score policy compliance, and generate hardened prompt revisions.
+          </p>
+        </div>
+        <div id="headerModePill" class="status-pill pill-sample">● Offline Sample Demo Mode</div>
+      </header>
+
+      <!-- PAGE 1: HOME & CONFIGURATION -->
+      <section id="page-home" class="page-section" aria-label="Home and Configuration">
+        <div class="card workbench-bar">
+          <div class="workbench-copy">
+            <strong>Quick Start Workbench</strong> — Paste your agent's prompt below or load the built-in <strong>Apex Retail Support</strong> sample agent to explore AI Sentinel immediately.
+          </div>
+          <div class="workbench-actions">
+            <button type="button" id="loadSampleBtn" class="btn btn-secondary">👉 Load Sample Template</button>
+            <button type="button" id="clearConfigBtn" class="btn btn-secondary">🧹 Clear</button>
+          </div>
+        </div>
+
+        <div class="config-grid">
+          <div class="card">
+            <h2 class="section-heading">📝 Agent Specification</h2>
+            <div class="field-group">
+              <label class="field-label" for="agentPromptInput">System Prompt / Instruction Set</label>
+              <textarea
+                id="agentPromptInput"
+                class="text-area"
+                rows="11"
+                placeholder="Define the behavior, tone, refund limits, escalation policies, and security rules of your AI agent..."
+              ></textarea>
+              <div id="promptMeta" class="field-meta">Prompt length: 0 chars · 0 lines</div>
+            </div>
+
+            <div class="field-group">
+              <label class="field-label" for="kbInput">Knowledge Base / FAQ Context (Optional)</label>
+              <textarea
+                id="kbInput"
+                class="text-area"
+                rows="6"
+                placeholder="Add shipping policies, refund windows, restocking fees, or support contact details..."
+              ></textarea>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="scenario-head">
+              <div>
+                <h2 class="section-heading">🧬 Adversarial Scenario Matrix</h2>
+                <p class="muted-text">Select red-team customer behaviors to run in parallel:</p>
+              </div>
+              <button type="button" id="toggleAllCatsBtn" class="btn-link">Deselect all</button>
+            </div>
+
+            <div class="scenario-list" id="scenarioList">
+              <label class="scenario-item">
+                <input type="checkbox" name="scenario" value="Angry Customer" checked />
+                <div>
+                  <div class="scenario-title">😡 Angry Customer</div>
+                  <div class="scenario-desc">Hostile, impatient customer demanding immediate policy exceptions.</div>
+                </div>
+              </label>
+              <label class="scenario-item">
+                <input type="checkbox" name="scenario" value="Hindi + English" checked />
+                <div>
+                  <div class="scenario-title">🗣️ Hindi + English (Hinglish)</div>
+                  <div class="scenario-desc">Bilingual phrasing and code-switching edge cases.</div>
+                </div>
+              </label>
+              <label class="scenario-item">
+                <input type="checkbox" name="scenario" value="Off-topic" checked />
+                <div>
+                  <div class="scenario-title">⛺ Off-topic Wanderer</div>
+                  <div class="scenario-desc">Unrelated requests to verify conversational guardrails.</div>
+                </div>
+              </label>
+              <label class="scenario-item">
+                <input type="checkbox" name="scenario" value="Policy Exception" checked />
+                <div>
+                  <div class="scenario-title">💸 Policy Exception Pressure</div>
+                  <div class="scenario-desc">VIP threats and pressure to bypass return windows or fees.</div>
+                </div>
+              </label>
+              <label class="scenario-item">
+                <input type="checkbox" name="scenario" value="Abuse" checked />
+                <div>
+                  <div class="scenario-title">🤬 Verbal Abuse Handling</div>
+                  <div class="scenario-desc">Profanity and insults to verify warning &amp; escalation triggers.</div>
+                </div>
+              </label>
+              <label class="scenario-item">
+                <input type="checkbox" name="scenario" value="Long Conversation" checked />
+                <div>
+                  <div class="scenario-title">🔒 Security Audit / Prompt Injection</div>
+                  <div class="scenario-desc">Compliance-pretext jailbreaks attempting to extract system instructions.</div>
+                </div>
+              </label>
+            </div>
+
+            <div id="selectedCountMeta" class="field-meta">Selected scenarios: 6 / 6</div>
+
+            <hr class="divider" />
+
+            <label id="sampleToggleWrap" class="checkbox-inline hidden">
+              <input type="checkbox" id="useSampleCheckbox" />
+              <span>🧪 Use Offline Sample Demo (skip Gemini API calls)</span>
+            </label>
+            <div id="noKeyHint" class="alert alert-info">
+              No Gemini API key entered — running in <strong>Offline Sample Demo</strong> mode.
+            </div>
+
+            <button type="button" id="runValidationBtn" class="btn btn-primary btn-full">
+              🚀 Run Simulation (Sample Demo)
+            </button>
+          </div>
+        </div>
+
+        <div id="homeStatusArea" class="hidden"></div>
+      </section>
+
+      <!-- PAGE 2: EVALUATION DASHBOARD -->
+      <section id="page-dashboard" class="page-section hidden" aria-label="Evaluation Dashboard">
+        <div id="dashEmpty" class="empty-state-host"></div>
+        <div id="dashContent" class="hidden">
+          <div class="kpi-grid" id="dashKpiGrid"></div>
+
+          <div class="card">
+            <h2 class="section-heading">📋 Stress Test Scenario Breakdown</h2>
+            <div tabindex="0" role="region" aria-labelledby="scenarioTableCaption" class="table-wrapper">
+              <table class="data-table">
+                <caption id="scenarioTableCaption" class="sr-only">Stress test scenario breakdown by persona and reliability score</caption>
+                <thead>
+                  <tr>
+                    <th scope="col">Persona</th>
+                    <th scope="col">Category</th>
+                    <th scope="col">Score</th>
+                    <th scope="col">Status</th>
+                    <th scope="col">Failure Type</th>
+                  </tr>
+                </thead>
+                <tbody id="scenarioTableBody"></tbody>
+              </table>
+            </div>
+
+            <div class="extremes-grid" id="extremesGrid"></div>
+          </div>
+
+          <div class="charts-two-col">
+            <div class="card">
+              <h2 class="section-heading">📊 Dimensional Scorecard</h2>
+              <div id="dimensionalChart"></div>
+            </div>
+            <div class="card">
+              <h2 class="section-heading">🚨 Failure Categories</h2>
+              <div id="failureDonutChart"></div>
+            </div>
+          </div>
+
+          <div class="card">
+            <h2 class="section-heading">📈 Reliability Score by Persona</h2>
+            <div id="personaBarChart"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- PAGE 3: FAILURE EXPLORER -->
+      <section id="page-explorer" class="page-section hidden" aria-label="Failure Explorer">
+        <div id="explorerEmpty" class="empty-state-host"></div>
+        <div id="explorerContent" class="hidden">
+          <div class="card explorer-controls">
+            <div class="segmented" role="group" aria-label="Filter scenarios">
+              <button type="button" class="seg-btn" id="filterAllBtn" aria-pressed="true">All Scenarios</button>
+              <button type="button" class="seg-btn" id="filterFailBtn" aria-pressed="false">Failed Only</button>
+            </div>
+            <div class="select-wrap">
+              <label class="field-label" for="personaSelect">Select Customer Scenario Transcript</label>
+              <select id="personaSelect" class="select-input"></select>
+            </div>
+          </div>
+
+          <div id="explorerNoFailures" class="alert alert-success hidden">
+            All scenarios passed safety and policy checks — switch to <strong>All Scenarios</strong> to review every transcript.
+          </div>
+
+          <div id="explorerDetail">
+            <div class="card persona-meta-grid" id="personaMetaCard"></div>
+
+            <div class="explorer-split">
+              <div class="card">
+                <h2 class="section-heading">💬 Conversation Transcript</h2>
+                <div id="chatTranscript" class="chat-scroll"></div>
+              </div>
+
+              <div class="explorer-diagnosis">
+                <div id="evalStatusBanner"></div>
+                <div class="card" id="evalScorecard"></div>
+                <div class="card hidden" id="repairBox">
+                  <div class="repair-header">
+                    <h3 class="section-heading">⚡ Recommended Prompt Repair</h3>
+                    <button type="button" id="copyRepairBtn" class="btn btn-secondary btn-sm">📋 Copy</button>
+                  </div>
+                  <pre class="code-block" id="repairCode"></pre>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- PAGE 4: PROMPT OPTIMIZER -->
+      <section id="page-optimizer" class="page-section hidden" aria-label="Prompt Optimizer">
+        <div id="optimizerEmpty" class="empty-state-host"></div>
+        <div id="optimizerContent" class="hidden">
+          <div class="optimizer-top-grid">
+            <div class="card metric-center">
+              <div class="metric-title">Baseline Reliability (v1.0)</div>
+              <div id="optBaselineVal" class="metric-value fail-text">—</div>
+              <div class="metric-sub">Measured on original instructions</div>
+            </div>
+            <div class="card metric-center">
+              <div class="metric-title">Projected Reliability (v2.0)</div>
+              <div id="optProjectedVal" class="metric-value pass-text">—</div>
+              <div id="optDeltaSub" class="metric-sub">—</div>
+            </div>
+            <div class="card">
+              <h2 class="section-heading">📄 Executive Validation Dossier</h2>
+              <button type="button" id="downloadPdfBtn" class="btn btn-primary btn-full">
+                📥 Download Executive PDF Report
+              </button>
+              <p class="muted-text small-note">Includes executive KPIs, risk tier, scenario matrix, prompt v2.0, and failure trace.</p>
+            </div>
+          </div>
+
+          <div class="card">
+            <h2 class="section-heading">🛠️ Synthesized Defensive Enhancements</h2>
+            <ul id="improvementsList" class="improvements-grid"></ul>
+          </div>
+
+          <div class="card">
+            <div class="diff-toolbar">
+              <div class="segmented" role="tablist" aria-label="Prompt comparison view">
+                <button type="button" role="tab" id="tabSideBySide" class="seg-btn" aria-selected="true">Side-by-Side (v1.0 vs v2.0)</button>
+                <button type="button" role="tab" id="tabUnifiedDiff" class="seg-btn" aria-selected="false">Unified Line Diff</button>
+              </div>
+              <button type="button" id="applyV2Btn" class="btn btn-secondary">🔁 Apply v2.0 &amp; Re-test</button>
+            </div>
+
+            <div id="panelSideBySide" role="tabpanel" aria-labelledby="tabSideBySide" class="compare-grid">
+              <div>
+                <h3 class="compare-title">Original System Instructions (v1.0)</h3>
+                <pre class="code-block" id="promptV1Code"></pre>
+              </div>
+              <div>
+                <h3 class="compare-title">Optimized System Instructions (v2.0)</h3>
+                <pre class="code-block" id="promptV2Code"></pre>
+              </div>
+            </div>
+
+            <div id="panelUnifiedDiff" role="tabpanel" aria-labelledby="tabUnifiedDiff" hidden>
+              <h3 class="compare-title">Line Diff (v1.0 → v2.0)</h3>
+              <div class="diff-block" id="diffOutput"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- PAGE 5: ARCHITECTURE DIAGRAM -->
+      <section id="page-architecture" class="page-section hidden" aria-label="Architecture Diagram">
+        <div class="card">
+          <h2 class="section-heading">🔁 Closed-Loop Pipeline Flow</h2>
+          <svg viewBox="0 0 1000 225" class="arch-svg" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="AI Sentinel closed-loop validation pipeline diagram">
+            <defs>
+              <marker id="arrow" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                <path d="M 0 0 L 10 5 L 0 10 z" fill="#64748b" />
+              </marker>
+              <linearGradient id="primaryGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#e11a2f" />
+                <stop offset="100%" stop-color="#9f1222" />
+              </linearGradient>
+              <linearGradient id="secondaryGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#1e293b" />
+                <stop offset="100%" stop-color="#0f172a" />
+              </linearGradient>
+            </defs>
+
+            <rect x="10" y="38" width="120" height="72" rx="10" fill="url(#secondaryGrad)" />
+            <text x="70" y="71" fill="#ffffff" font-family="'Outfit', sans-serif" font-size="12" font-weight="bold" text-anchor="middle">Agent Prompt</text>
+            <text x="70" y="89" fill="#cbd5e1" font-family="sans-serif" font-size="9.5" text-anchor="middle">(System Config)</text>
+
+            <path d="M 130 74 L 165 74" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)" />
+
+            <rect x="175" y="38" width="130" height="72" rx="10" fill="url(#primaryGrad)" />
+            <text x="240" y="71" fill="#ffffff" font-family="'Outfit', sans-serif" font-size="12" font-weight="bold" text-anchor="middle">Persona Generator</text>
+            <text x="240" y="89" fill="#fecdd3" font-family="sans-serif" font-size="9.5" text-anchor="middle">(Gemini 3.8 Flash)</text>
+
+            <path d="M 305 74 L 340 74" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)" />
+
+            <rect x="350" y="38" width="130" height="72" rx="10" fill="url(#secondaryGrad)" />
+            <text x="415" y="71" fill="#ffffff" font-family="'Outfit', sans-serif" font-size="12" font-weight="bold" text-anchor="middle">Chat Simulator</text>
+            <text x="415" y="89" fill="#cbd5e1" font-family="sans-serif" font-size="9.5" text-anchor="middle">(Adversarial Loop)</text>
+
+            <path d="M 480 74 L 515 74" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)" />
+
+            <rect x="525" y="38" width="130" height="72" rx="10" fill="url(#primaryGrad)" />
+            <text x="590" y="71" fill="#ffffff" font-family="'Outfit', sans-serif" font-size="12" font-weight="bold" text-anchor="middle">AI Eval Engine</text>
+            <text x="590" y="89" fill="#fecdd3" font-family="sans-serif" font-size="9.5" text-anchor="middle">(LLM Judge)</text>
+
+            <path d="M 655 74 L 690 74" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)" />
+
+            <rect x="700" y="38" width="120" height="72" rx="10" fill="url(#secondaryGrad)" />
+            <text x="760" y="71" fill="#ffffff" font-family="'Outfit', sans-serif" font-size="12" font-weight="bold" text-anchor="middle">Metrics Engine</text>
+            <text x="760" y="89" fill="#cbd5e1" font-family="sans-serif" font-size="9.5" text-anchor="middle">(Reliability Matrix)</text>
+
+            <path d="M 820 74 L 855 74" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)" />
+
+            <rect x="865" y="38" width="125" height="72" rx="10" fill="url(#primaryGrad)" />
+            <text x="927" y="71" fill="#ffffff" font-family="'Outfit', sans-serif" font-size="12" font-weight="bold" text-anchor="middle">Dashboard &amp; PDF</text>
+            <text x="927" y="89" fill="#fecdd3" font-family="sans-serif" font-size="9.5" text-anchor="middle">(Prompt v2 / Report)</text>
+
+            <path d="M 927 110 C 927 192, 70 192, 70 116" fill="none" stroke="#e11a2f" stroke-width="2" stroke-dasharray="6,5" marker-end="url(#arrow)" />
+            <rect x="305" y="159" width="390" height="24" rx="12" fill="#fff1f2" stroke="#fecdd3" stroke-width="1" />
+            <text x="500" y="175" fill="#be1224" font-family="'Outfit', sans-serif" font-size="11.5" font-weight="bold" text-anchor="middle">Optimization &amp; Instruction Re-Injection Loop (Prompt v2.0)</text>
+          </svg>
+        </div>
+
+        <div class="arch-grid">
+          <article class="arch-card">
+            <div>
+              <h3 class="arch-card-title accent-crimson">1. Persona Generator</h3>
+              <p class="arch-card-body">Queries Gemini with the target agent's system context to synthesize realistic customer profiles, linguistic traits, and adversarial goals tailored to your domain.</p>
+            </div>
+            <span class="arch-engine-tag">ENGINE: Gemini 3.8 Flash</span>
+          </article>
+          <article class="arch-card">
+            <div>
+              <h3 class="arch-card-title">2. Chat Simulator</h3>
+              <p class="arch-card-body">Orchestrates concurrent multi-turn dialogues between the target agent and generated personas with strict turn-alternation and role isolation.</p>
+            </div>
+            <span class="arch-engine-tag">ENGINE: ThreadPoolExecutor</span>
+          </article>
+          <article class="arch-card">
+            <div>
+              <h3 class="arch-card-title accent-crimson">3. AI Eval Engine</h3>
+              <p class="arch-card-body">Judges each dialogue transcript via structured Pydantic schemas, scoring policy compliance, safety, hallucinations, and prescribing repairs.</p>
+            </div>
+            <span class="arch-engine-tag">ENGINE: Structured LLM Judge</span>
+          </article>
+          <article class="arch-card">
+            <div>
+              <h3 class="arch-card-title">4. Metrics Engine</h3>
+              <p class="arch-card-body">Aggregates dimensional evaluations into reliability KPIs, deployment risk tiers, and isolates highest-risk failure patterns.</p>
+            </div>
+            <span class="arch-engine-tag">ENGINE: FastAPI &amp; SVG Telemetry</span>
+          </article>
+          <article class="arch-card">
+            <div>
+              <h3 class="arch-card-title accent-crimson">5. Prompt Optimizer</h3>
+              <p class="arch-card-body">Correlates failure logs against system boundaries to synthesize a hardened v2.0 prompt that can be diffed and re-tested in one click.</p>
+            </div>
+            <span class="arch-engine-tag">ENGINE: Gemini Prompt Synthesis</span>
+          </article>
+          <article class="arch-card">
+            <div>
+              <h3 class="arch-card-title">6. Reporting Dossier</h3>
+              <p class="arch-card-body">Compiles risk ratings, scenario scorecards, v2.0 prompt upgrades, and critical failure traces into an XML-safe executive PDF.</p>
+            </div>
+            <span class="arch-engine-tag">ENGINE: ReportLab PDF</span>
+          </article>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

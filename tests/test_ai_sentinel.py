@@ -3,6 +3,10 @@ import unittest
 from types import SimpleNamespace
 from unittest.mock import MagicMock
 
+from fastapi import FastAPI
+from fastapi.testclient import TestClient
+
+import app as web_app
 import evaluator
 import pdf_generator
 
@@ -209,6 +213,55 @@ class TestAISentinelPipeline(unittest.TestCase):
                 )
         finally:
             evaluator.get_gemini_client = original_factory
+
+    def test_vercel_fastapi_entrypoint_and_endpoints(self):
+        self.assertIsInstance(web_app.app, FastAPI)
+        client = TestClient(web_app.app)
+
+        home_resp = client.get("/")
+        self.assertEqual(home_resp.status_code, 200)
+        self.assertIn("AI Sentinel", home_resp.text)
+
+        health_resp = client.get("/api/health")
+        self.assertEqual(health_resp.status_code, 200)
+        self.assertEqual(health_resp.json()["status"], "ok")
+
+        sample_resp = client.get("/api/sample-template")
+        self.assertEqual(sample_resp.status_code, 200)
+        sample_data = sample_resp.json()
+        self.assertIn("Apex Retail", sample_data["agent_prompt"])
+
+        # Reject live validation when no API key is provided
+        err_resp = client.post(
+            "/api/validate",
+            json={
+                "agent_prompt": sample_data["agent_prompt"],
+                "knowledge_base": sample_data["knowledge_base"],
+                "selected_categories": ["Angry Customer"],
+                "use_sample_agent": False,
+            },
+        )
+        self.assertEqual(err_resp.status_code, 400)
+
+        # Sample validation succeeds
+        val_resp = client.post(
+            "/api/validate",
+            json={
+                "agent_prompt": sample_data["agent_prompt"],
+                "knowledge_base": sample_data["knowledge_base"],
+                "selected_categories": ["Angry Customer", "Long Conversation"],
+                "use_sample_agent": True,
+            },
+        )
+        self.assertEqual(val_resp.status_code, 200)
+        val_data = val_resp.json()
+        self.assertEqual(len(val_data["results"]), 2)
+
+        # PDF report endpoint returns valid PDF bytes
+        pdf_resp = client.post("/api/report", json=val_data)
+        self.assertEqual(pdf_resp.status_code, 200)
+        self.assertEqual(pdf_resp.headers["content-type"], "application/pdf")
+        self.assertTrue(pdf_resp.content.startswith(b"%PDF"))
 
 
 if __name__ == "__main__":

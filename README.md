@@ -78,11 +78,10 @@ AI Sentinel uses a closed-loop validation architecture to evaluate, diagnose, an
 
 ## 🛠️ Tech Stack
 
-* **Frontend & Dashboard**: Python Streamlit (custom CSS injected for a premium enterprise light-themed layout).
-* **AI Orchestration**: Gemini API via `google-genai` Python SDK.
+* **Frontend & Dashboard**: Modern responsive HTML5 / CSS3 / Vanilla JS SPA with SVG telemetry charts.
+* **Backend & Serverless API**: Python FastAPI (`app.py` exporting top-level `app` for Vercel & Uvicorn).
+* **AI Orchestration**: Gemini API via `google-genai` Python SDK (`gemini-3.8-flash`).
 * **Concurrency**: `ThreadPoolExecutor` for parallel scenario simulations.
-* **Data Processing**: Pandas.
-* **Visualizations**: Plotly (horizontal bar charts, pie charts, score cards).
 * **Report Generation**: ReportLab PDF library (styled with cover pages, grids, and appendix traces).
 
 ---
@@ -102,10 +101,11 @@ pip install -r requirements.txt
 ```
 
 ### 3. Launch the Application
-Run the Streamlit server:
+Run the FastAPI server locally:
 ```bash
-streamlit run app.py
+uvicorn app:app --reload --port 8000
 ```
+Then open `http://localhost:8000` in your browser.
 
 ### 4. Provide API Key (Optional)
 * To run **Live Evaluations** using Gemini, input your API key in the sidebar text field, copy `.env.example` to `.env`, or set the environment variable:
@@ -119,20 +119,17 @@ streamlit run app.py
 
 ## ☁️ Deployment
 
-### Streamlit Community Cloud
-1. Push this repository to GitHub.
-2. Create a new app in Streamlit Community Cloud pointing to `app.py`.
-3. Under **Advanced settings → Secrets**, optionally add:
-   ```toml
-   GEMINI_API_KEY = "your-api-key-here"
-   ```
+### Vercel (Serverless FastAPI + Static Frontend)
+1. Push this repository to GitHub and import it into Vercel.
+2. `app.py` exports the top-level FastAPI `app` instance and `vercel.json` configures `maxDuration: 60` for live Gemini runs.
+3. *(Optional)* In Vercel **Project Settings → Environment Variables**, add `GEMINI_API_KEY` (users can also enter their key in the UI sidebar).
 
 ### Docker (Cloud Run / Render / Railway / Self-Hosted)
 ```bash
 docker build -t ai-sentinel .
-docker run -p 8501:8501 -e GEMINI_API_KEY="your-api-key-here" ai-sentinel
+docker run -p 8000:8000 -e GEMINI_API_KEY="your-api-key-here" ai-sentinel
 ```
-The container exposes port `8501` (or respects `$PORT`) and includes a `/_stcore/health` healthcheck.
+The container exposes port `8000` (or respects `$PORT`) and includes a `/api/health` healthcheck.
 
 ### Running Tests
 ```bash
